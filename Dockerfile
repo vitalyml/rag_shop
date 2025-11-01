@@ -1,12 +1,12 @@
 FROM python:3.10-slim
 
 # Установка инструментов для компиляции (необходимы для сборки пакетов с C расширениями)
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    gcc \
-    g++ \
-    make \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#     build-essential \
+#     gcc \
+#     g++ \
+#     make \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Установка Poetry
 RUN pip install --no-cache-dir poetry==1.8.3
@@ -15,25 +15,21 @@ RUN pip install --no-cache-dir poetry==1.8.3
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VENV_IN_PROJECT=0 \
     POETRY_CACHE_DIR=/tmp/poetry_cache \
-    POETRY_INSTALLER_MAX_WORKERS=10
+    POETRY_INSTALLER_MAX_WORKERS=10 \
+    PIP_DEFAULT_TIMEOUT=100 \
+    PIP_RETRIES=5
 
 WORKDIR /app
 
 # Копируем файлы зависимостей
 COPY pyproject.toml poetry.lock ./
 
-# Экспортируем зависимости в requirements.txt и устанавливаем через pip --user
-# Это гарантирует установку всех зависимостей в /root/.local
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --without dev && \
-    pip install --no-cache-dir --user -r requirements.txt && \
-    # Явно устанавливаем typing_extensions если его нет (для совместимости)
-    pip install --no-cache-dir --user typing_extensions || true && \
-    rm -rf $POETRY_CACHE_DIR requirements.txt
-
-RUN pip install --no-cache-dir --user typing_extensions>=4.0.0 sentence_transformers
-
-# Проверяем, что Python видит установленные пакеты
-RUN python -c "import streamlit; import typing_extensions; print('All packages installed successfully')"
+# Устанавливаем зависимости через Poetry
+# Используем несколько попыток для надежности при сетевых проблемах
+RUN poetry install --no-interaction --no-ansi --without dev || \
+    (sleep 10 && poetry install --no-interaction --no-ansi --without dev) || \
+    (sleep 20 && poetry install --no-interaction --no-ansi --without dev) && \
+    rm -rf $POETRY_CACHE_DIR
 
 # Копируем код приложения
 COPY . .

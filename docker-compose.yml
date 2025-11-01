@@ -2,9 +2,12 @@ version: '3.8'
 
 services:
   rag-shop:
+    image: prod.easy-profiler.org:1443/rag_shop:latest  # Имя и тег образа
     build:
       context: .
       dockerfile: Dockerfile
+      platforms:
+        - "linux/amd64"
     container_name: rag-shop
     restart: unless-stopped
     ports:
