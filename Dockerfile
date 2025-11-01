@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir poetry==1.8.3
 
 # Настройка Poetry
 ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VENV_IN_PROJECT=0 \
+    POETRY_VIRTUALENVS_CREATE=false \
     POETRY_CACHE_DIR=/tmp/poetry_cache \
     POETRY_INSTALLER_MAX_WORKERS=10 \
     PIP_DEFAULT_TIMEOUT=100 \
