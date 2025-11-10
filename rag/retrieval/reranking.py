@@ -54,6 +54,8 @@ def generate_rewrites(query: str, llm_client) -> list[str]:
             print(f"Rewrite is empty or same as query, returning [query]")
             return [query]
 
+        return [query, rewrite]
+
     except Exception as e:
         print(f"Warning: Failed to parse rewrite response: {e}")
         print(f"Raw content was: {content if 'content' in locals() else 'NO CONTENT'}")
