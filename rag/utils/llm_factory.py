@@ -2,7 +2,7 @@ from rag.generation import LLMClient
 from config import settings
 
 
-def create_llm_client() -> LLMClient:
+def create_llm_client(use_reasoner: bool = False) -> LLMClient:
     provider = settings.AI_PROVIDER.lower()
 
     if provider == "vllm":
@@ -17,9 +17,10 @@ def create_llm_client() -> LLMClient:
                 "DEEPSEEK_API_KEY не установлен. "
                 "Добавьте его в .env файл или переменные окружения."
             )
+        model = settings.DEEPSEEK_REASONER_MODEL if use_reasoner else settings.DEEPSEEK_CHAT_MODEL
         return LLMClient(
             base_url=settings.DEEPSEEK_BASE_URL,
-            model=settings.DEEPSEEK_MODEL_NAME,
+            model=model,
             api_key=settings.DEEPSEEK_API_KEY
         )
     elif provider == "gemini":

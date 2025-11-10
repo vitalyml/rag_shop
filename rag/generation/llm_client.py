@@ -20,13 +20,25 @@ class LLMClient:
         max_tokens: int = 256,
         temperature: float = 0.7
     ) -> str:
-        resp = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
-        return resp.choices[0].message.content
+        try:
+            resp = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+            content = resp.choices[0].message.content
+
+            if not content:
+                print(f"WARNING: LLM returned empty content")
+                print(f"Response: {resp}")
+
+            return content or ""
+        except Exception as e:
+            print(f"ERROR in LLM chat: {e}")
+            print(f"Model: {self.model}")
+            print(f"Base URL: {self.client.base_url}")
+            raise
 
 
 # Обратная совместимость

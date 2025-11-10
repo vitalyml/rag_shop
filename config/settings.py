@@ -6,9 +6,24 @@ load_dotenv(find_dotenv(), override=True)
 
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
-RAW_DATA_DIR = DATA_DIR / "raw"
-PROCESSED_DATA_DIR = DATA_DIR / "processed"
-ARTIFACTS_DIR = DATA_DIR / "artifacts"
+
+# Магазин по умолчанию
+DEFAULT_SHOP = os.getenv("DEFAULT_SHOP", "kanzler")
+
+def get_shop_paths(shop_name: str = None):
+    """Получение путей для конкретного магазина"""
+    shop = shop_name or DEFAULT_SHOP
+    shop_dir = DATA_DIR / shop
+    return {
+        'raw': shop_dir / "raw",
+        'processed': shop_dir / "processed",
+        'artifacts': shop_dir / "artifacts"
+    }
+
+# Пути для магазина по умолчанию (для обратной совместимости)
+RAW_DATA_DIR = DATA_DIR / DEFAULT_SHOP / "raw"
+PROCESSED_DATA_DIR = DATA_DIR / DEFAULT_SHOP / "processed"
+ARTIFACTS_DIR = DATA_DIR / DEFAULT_SHOP / "artifacts"
 
 # S3 настройки
 S3_ENDPOINT = "http://prod.easy-profiler.org:9000"
@@ -27,8 +42,9 @@ VLLM_MODEL_NAME = os.getenv("VLLM_MODEL_NAME", "Qwen/Qwen2.5-7B-Instruct-AWQ")
 VLLM_API_KEY = os.getenv("VLLM_API_KEY", "test-key")  # Dummy key для локального сервера
 
 # DeepSeek настройки
-DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-DEEPSEEK_MODEL_NAME = "deepseek-reasoner"
+DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
+DEEPSEEK_CHAT_MODEL = "deepseek-chat"  # Для перефразов (быстрая)
+DEEPSEEK_REASONER_MODEL = "deepseek-reasoner"  # Для генерации ответа (reasoning)
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
 # Google Gemini настройки
@@ -37,7 +53,7 @@ GEMINI_MODEL_NAME = "gemini-2.0-flash-exp"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Embeddings модель
-EMBEDDING_MODEL = "intfloat/multilingual-e5-base"
+EMBEDDING_MODEL = "ai-forever/ru-en-RoSBERTa"
 
 # RAG параметры
 REWRITES_COUNT = 1
