@@ -47,6 +47,10 @@ DEEPSEEK_CHAT_MODEL = "deepseek-chat"  # Для перефразов (быстр
 DEEPSEEK_REASONER_MODEL = "deepseek-reasoner"  # Для генерации ответа (reasoning)
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
+OPENAI_BASE_URL = "https://api.openai.com/v1"
+OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 # Google Gemini настройки
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 GEMINI_MODEL_NAME = "gemini-2.0-flash-exp"

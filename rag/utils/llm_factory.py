@@ -23,6 +23,17 @@ def create_llm_client(use_reasoner: bool = False) -> LLMClient:
             model=model,
             api_key=settings.DEEPSEEK_API_KEY
         )
+    elif provider == "openai":
+        if not settings.OPENAI_API_KEY:
+            raise ValueError(
+                "OPENAI_API_KEY не установлен. "
+                "Добавьте его в .env файл или переменные окружения."
+            )
+        return LLMClient(
+            base_url=settings.OPENAI_BASE_URL,
+            model=settings.OPENAI_MODEL_NAME,
+            api_key=settings.OPENAI_API_KEY
+        )
     elif provider == "gemini":
         if not settings.GEMINI_API_KEY:
             raise ValueError(
