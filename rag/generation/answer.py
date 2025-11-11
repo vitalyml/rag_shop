@@ -7,8 +7,8 @@ RAG_PROMPT = """
 Выбери самые релевантные товары. Верни ТОЛЬКО список ID через запятую.
 
 ВНИМАНИЕ:
-- Синонимы считай эквивалентными: "худи"=="толстовка"=="свитшот", "джинсы"=="denim pants"
-- Учитывай все параметры запроса: цвет, размер, бренд, категория
+- Синонимы считай эквивалентными: например: "худи"=="толстовка"=="свитшот", "джинсы"=="denim pants" и тд.
+- Учитывай все параметры запроса: цвет, пол, бренд, категория
 
 Запрос: {user_query}
 
@@ -97,25 +97,17 @@ def generate_answer(
     print(f"===================\n")
 
     # Парсим список ID из ответа (формат: S1, S3, S7)
-    # Очищаем от лишних символов и разбиваем по запятым
     cleaned = full_content.strip().replace('"', '').replace('[', '').replace(']', '').replace('{', '').replace('}', '')
-
-    # Извлекаем ID вида S1, S2, S3...
     chosen_ids = []
     for part in cleaned.split(','):
         part = part.strip()
-        # Проверяем, что это ID вида S1, S2 и т.д.
         if part and (part.startswith('S') or part.startswith('s')):
-            # Нормализуем к верхнему регистру
             chosen_ids.append(part.upper())
 
     print(f"DEBUG: Parsed IDs: {chosen_ids}")
 
-    # Получаем выбранные товары
     chosen = [sources_by_id[sid] for sid in chosen_ids if sid in sources_by_id]
 
     print(f"DEBUG: Found {len(chosen)} matching sources")
 
-    return {
-        "chosen": chosen
-    }
+    return {"chosen": chosen}
