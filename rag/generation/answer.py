@@ -1,35 +1,22 @@
-import json
-import re
 import pandas as pd
 
 from config import settings
 
 
 RAG_PROMPT = """
-Выбери самые релевантные товары на основе запроса пользователя. Верни ТОЛЬКО валидный JSON.
+Выбери самые релевантные товары. Верни ТОЛЬКО список ID через запятую.
 
 ВНИМАНИЕ:
-- Если в описании товара используется синоним или близкий термин, считай, что требование выполнено.
-- Например:
-  - "худи" == "толстовка" == "свитшот" == "hoodie"
-  - "джинсы" == "denim pants" и т.п.
-- Выбирай наиболее релевантные товары в соответствии с запросом.
-- Учитывай все параметры из запроса (цвет, размер, бренд, категория и т.д.)
+- Синонимы считай эквивалентными: "худи"=="толстовка"=="свитшот", "джинсы"=="denim pants"
+- Учитывай все параметры запроса: цвет, размер, бренд, категория
 
 Запрос: {user_query}
 
-Задача:
-1) Выбери до {max_sources} самых релевантных товаров из источников.
-2) Верни JSON:
-{{
-  "chosen_ids": ["S1","S3",...]
-}}
+Задача: Выбери до {max_sources} самых релевантных товаров. Верни их ID через запятую в порядке убывания релевантности.
 
-СТРОГО:
-- chosen_ids должен содержать ID источников в порядке убывания релевантности (самые подходящие в начале).
-- Не выдумывай свойства товаров, опирайся только на источники.
+Формат ответа (СТРОГО): S1, S3, S7
 
-Источники (СТРОГО ОБЯЗАТЕЛЬНЫ):
+Источники:
 {sources_block}
 """
 
@@ -106,24 +93,28 @@ def generate_answer(
 
     print(f"\n=== LLM Response ===")
     print(f"Length: {len(full_content)}")
-    print(f"Content: {full_content[:500]}")
+    print(f"Content: {full_content}")
     print(f"===================\n")
 
-    # Парсим JSON из ответа
-    try:
-        json_match = re.search(r'\{.*\}', full_content, re.DOTALL)
-        if json_match:
-            data = json.loads(json_match.group())
-        else:
-            data = json.loads(full_content)
-    except json.JSONDecodeError as e:
-        print(f"ERROR: Failed to parse JSON: {e}")
-        print(f"Raw content: {full_content}")
-        data = {"chosen_ids": []}
+    # Парсим список ID из ответа (формат: S1, S3, S7)
+    # Очищаем от лишних символов и разбиваем по запятым
+    cleaned = full_content.strip().replace('"', '').replace('[', '').replace(']', '').replace('{', '').replace('}', '')
 
-    # Получаем выбранные ID товаров
-    chosen_ids = data.get("chosen_ids", [])
+    # Извлекаем ID вида S1, S2, S3...
+    chosen_ids = []
+    for part in cleaned.split(','):
+        part = part.strip()
+        # Проверяем, что это ID вида S1, S2 и т.д.
+        if part and (part.startswith('S') or part.startswith('s')):
+            # Нормализуем к верхнему регистру
+            chosen_ids.append(part.upper())
+
+    print(f"DEBUG: Parsed IDs: {chosen_ids}")
+
+    # Получаем выбранные товары
     chosen = [sources_by_id[sid] for sid in chosen_ids if sid in sources_by_id]
+
+    print(f"DEBUG: Found {len(chosen)} matching sources")
 
     return {
         "chosen": chosen
