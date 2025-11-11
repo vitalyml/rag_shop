@@ -3,7 +3,6 @@
 """
 
 import os
-import re
 
 # Fix для macOS: отключаем многопоточность ДО импорта библиотек
 os.environ['PYTHONIOENCODING'] = 'utf-8'
@@ -33,13 +32,6 @@ st.markdown("""
         color: white;
         border-radius: 5px;
         width: 100%;
-    }
-    .answer-box {
-        background-color: #f0f7ff;
-        border-left: 4px solid #667eea;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -120,39 +112,15 @@ def render_product_card(product, rank, show_score=True):
 
 
 def render_answer_with_sources(answer):
-    """Отрисовка ответа с источниками"""
-    answer_text = answer.get("answer_md", "")
+    """Отрисовка товаров, выбранных LLM"""
     sources = answer.get("chosen", [])
 
-    # Создаем словарь для замены меток на ссылки
-    sources_map = {}
-    for source in sources:
-        source_id = source.get("id", "")
-        url = source.get("url", "#")
-        title = source.get("title", "Источник")
-        # Создаем HTML ссылку
-        sources_map[source_id] = f'<a href="{url}" target="_blank" style="color: #0066cc; text-decoration: none; font-weight: 500;">[{source_id}]</a>'
-
-    # Заменяем все метки [S#] на ссылки
-    def replace_citation(match):
-        citation = match.group(0)  # например "[S1]"
-        source_id = match.group(1)  # например "S1"
-        return sources_map.get(source_id, citation)
-
-    answer_html = re.sub(r'\[(S\d+)\]', replace_citation, answer_text)
-
-    # Ответ
-    st.markdown(f"""
-    <div class="answer-box">
-        <p style="font-size: 1.1rem; line-height: 1.6; color: #555;">{answer_html}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Источники
+    # Показываем только карточки выбранных товаров
     if sources:
-        st.markdown("### Источники")
         for i, source in enumerate(sources, 1):
             render_product_card(source, i, show_score=False)
+    else:
+        st.warning("LLM не выбрал ни одного релевантного товара для вашего запроса.")
 
 
 def main():

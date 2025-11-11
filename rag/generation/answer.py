@@ -6,30 +6,27 @@ from config import settings
 
 
 RAG_PROMPT = """
-Ты отвечаешь на основе переданных источников, без выдумок. Пиши на языке запроса. Верни ТОЛЬКО валидный JSON.
+Выбери самые релевантные товары на основе запроса пользователя. Верни ТОЛЬКО валидный JSON.
 
 ВНИМАНИЕ:
 - Если в описании товара используется синоним или близкий термин, считай, что требование выполнено.
 - Например:
   - "худи" == "толстовка" == "свитшот" == "hoodie"
   - "джинсы" == "denim pants" и т.п.
-- В начале рекомендуй наиболее релевантные товары в соответствии с запросом.
-- Отвечай макисмально КРАТКО
-
+- Выбирай наиболее релевантные товары в соответствии с запросом.
+- Учитывай все параметры из запроса (цвет, размер, бренд, категория и т.д.)
 
 Запрос: {user_query}
 
 Задача:
-1) Выбери до {max_sources} самых релевантных источников.
-2) Напиши 1–3 предложений рекомендаций, ссылаясь метками [S#] в тексте.
-3) Верни JSON:
+1) Выбери до {max_sources} самых релевантных товаров из источников.
+2) Верни JSON:
 {{
-  "chosen_ids": ["S1","S3",...],
-  "answer_md": "<короткий markdown с [S#]>"
+  "chosen_ids": ["S1","S3",...]
 }}
 
 СТРОГО:
-- chosen_ids = ровно те [S#], что есть в answer_md, в том же порядке.
+- chosen_ids должен содержать ID источников в порядке убывания релевантности (самые подходящие в начале).
 - Не выдумывай свойства товаров, опирайся только на источники.
 
 Источники (СТРОГО ОБЯЗАТЕЛЬНЫ):
@@ -122,13 +119,12 @@ def generate_answer(
     except json.JSONDecodeError as e:
         print(f"ERROR: Failed to parse JSON: {e}")
         print(f"Raw content: {full_content}")
-        data = {"answer_md": full_content, "chosen_ids": []}
+        data = {"chosen_ids": []}
 
-    answer = (data.get("answer_md") or "").strip()
-    cited_ids = extract_citations(answer)
-    chosen = [sources_by_id[sid] for sid in cited_ids if sid in sources_by_id]
+    # Получаем выбранные ID товаров
+    chosen_ids = data.get("chosen_ids", [])
+    chosen = [sources_by_id[sid] for sid in chosen_ids if sid in sources_by_id]
 
     return {
-        "answer_md": answer,
         "chosen": chosen
     }
