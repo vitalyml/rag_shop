@@ -33,8 +33,8 @@ AWS_ACCESS_KEY = os.getenv("AWS_KEY")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET")
 
 # AI Model настройки
-# Поддерживаемые провайдеры: "vllm", "deepseek", "gemini"
-AI_PROVIDER = os.getenv("AI_PROVIDER", "vllm")
+# Поддерживаемые провайдеры: "vllm", "deepseek", "openai", "gemini", "perplexity"
+AI_PROVIDER = os.getenv("AI_PROVIDER", "openai")
 
 # vLLM настройки
 VLLM_BASE_URL = os.getenv("VLLM_BASE_URL", "http://127.0.0.1:8000/v1/")
@@ -43,17 +43,17 @@ VLLM_API_KEY = os.getenv("VLLM_API_KEY", "test-key")  # Dummy key для лок�
 
 # DeepSeek настройки
 DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1"
-DEEPSEEK_CHAT_MODEL = "deepseek-chat"  # Для перефразов (быстрая)
-DEEPSEEK_REASONER_MODEL = "deepseek-reasoner"  # Для генерации ответа (reasoning)
+DEEPSEEK_CHAT_MODEL = "deepseek-chat"  
+DEEPSEEK_REASONER_MODEL = "deepseek-reasoner"  
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 
 OPENAI_BASE_URL = "https://api.openai.com/v1"
-OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini")
+OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME", "gpt-4.1-mini")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Google Gemini настройки
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-GEMINI_MODEL_NAME = "gemini-2.0-flash-exp"
+GEMINI_MODEL_NAME = "gemini-2.0-flash"  
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Embeddings модель

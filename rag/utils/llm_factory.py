@@ -48,5 +48,5 @@ def create_llm_client(use_reasoner: bool = False) -> LLMClient:
     else:
         raise ValueError(
             f"Неизвестный провайдер: {provider}. "
-            f"Поддерживаемые провайдеры: vllm, deepseek, gemini"
+            f"Поддерживаемые провайдеры: vllm, deepseek, openai, gemini"
         )

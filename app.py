@@ -3,6 +3,7 @@
 """
 
 import os
+import re
 
 # Fix для macOS: отключаем многопоточность ДО импорта библиотек
 os.environ['PYTHONIOENCODING'] = 'utf-8'
@@ -63,18 +64,16 @@ def load_models(shop_name: str):
 
         # проверка LLM
         try:
-            llm_chat = create_llm_client(use_reasoner=False)  # Для перефразов
-            llm_reasoner = create_llm_client(use_reasoner=True)  # Для генерации ответа
+            llm_chat = create_llm_client(use_reasoner=False)  # Используем chat модель для всего
             # Проверяем доступность
             test_response = llm_chat.chat([{"role": "user", "content": "hi"}], max_tokens=5)
             llm_available = True
         except Exception as e:
             llm_chat = None
-            llm_reasoner = None
             llm_available = False
             st.sidebar.warning(f"LLM недоступен: {str(e)[:50]}")
 
-        return df, dense, llm_chat, llm_reasoner, llm_available
+        return df, dense, llm_chat, llm_available
 
 
 def render_product_card(product, rank, show_score=True):
@@ -125,10 +124,27 @@ def render_answer_with_sources(answer):
     answer_text = answer.get("answer_md", "")
     sources = answer.get("chosen", [])
 
+    # Создаем словарь для замены меток на ссылки
+    sources_map = {}
+    for source in sources:
+        source_id = source.get("id", "")
+        url = source.get("url", "#")
+        title = source.get("title", "Источник")
+        # Создаем HTML ссылку
+        sources_map[source_id] = f'<a href="{url}" target="_blank" style="color: #0066cc; text-decoration: none; font-weight: 500;">[{source_id}]</a>'
+
+    # Заменяем все метки [S#] на ссылки
+    def replace_citation(match):
+        citation = match.group(0)  # например "[S1]"
+        source_id = match.group(1)  # например "S1"
+        return sources_map.get(source_id, citation)
+
+    answer_html = re.sub(r'\[(S\d+)\]', replace_citation, answer_text)
+
     # Ответ
     st.markdown(f"""
     <div class="answer-box">
-        <p style="font-size: 1.1rem; line-height: 1.6; color: #555;">{answer_text}</p>
+        <p style="font-size: 1.1rem; line-height: 1.6; color: #555;">{answer_html}</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -162,7 +178,7 @@ def main():
 
     # Загружаем модели для выбранного магазина
     try:
-        df, dense, llm_chat, llm_reasoner, llm_available = load_models(selected_shop)
+        df, dense, llm_chat, llm_available = load_models(selected_shop)
     except FileNotFoundError as e:
         st.error(f"Ошибка загрузки данных: {e}")
         return
@@ -214,8 +230,8 @@ def main():
                         final_k=settings.FINAL_TOP_K
                     )
 
-                    # 3. Генерируем ответ с помощью reasoner модели, передаем ТОЛЬКО оригинальный запрос
-                    answer = generate_answer(query, results, df, llm_reasoner)
+                    # 3. Генерируем ответ с помощью chat модели, передаем ТОЛЬКО оригинальный запрос
+                    answer = generate_answer(query, results, df, llm_chat)
 
                     # DEBUG: Проверяем что в answer
                     print(f"DEBUG: Answer keys: {answer.keys()}")

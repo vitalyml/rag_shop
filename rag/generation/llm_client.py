@@ -21,12 +21,23 @@ class LLMClient:
         temperature: float = 0.7
     ) -> str:
         try:
-            resp = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-            )
+            # Для новых моделей OpenAI (GPT-4.1+) используем max_completion_tokens
+            if self.model.startswith(("gpt-4.1", "gpt-5")):
+                kwargs = {
+                    "model": self.model,
+                    "messages": messages,
+                    "max_completion_tokens": max_tokens,
+                    "temperature": temperature,
+                }
+            else:
+                kwargs = {
+                    "model": self.model,
+                    "messages": messages,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                }
+
+            resp = self.client.chat.completions.create(**kwargs)
             content = resp.choices[0].message.content
 
             if not content:
